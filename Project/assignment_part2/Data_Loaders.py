@@ -18,7 +18,10 @@ class Nav_Dataset(dataset.Dataset):
 
     def __len__(self):
 # STUDENTS: __len__() returns the length of the dataset
-        pass
+        ## Bryan Arroyo Code ##
+        return len(self.data)
+        ## End Bryan Arroyo Code ##
+        
 
     def __getitem__(self, idx):
         if not isinstance(idx, int):
@@ -31,6 +34,11 @@ class Nav_Dataset(dataset.Dataset):
 class Data_Loaders():
     def __init__(self, batch_size):
         self.nav_dataset = Nav_Dataset()
+        ## Bryan Arroyo Code ##
+        self.train_loader = {}
+        self.test_loader = {}
+        print(f"Dataset size: {self.nav_dataset.__len__()} samples")
+        ## End Bryan Arroyo Code ##
 # STUDENTS: randomly split dataset into two data.DataLoaders, self.train_loader and self.test_loader
 # make sure your split can handle an arbitrary number of samples in the dataset as this may vary
 

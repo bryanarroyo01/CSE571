@@ -16,10 +16,8 @@ def collect_training_data(total_actions):
     num_params = 7
     #STUDENTS: network_params will be used to store your training data
     # a single sample will be comprised of: sensor_readings, action, collision
-    
     ## Bryan Arroyo Code ##
-    network_params = np.empty((0, num_params))
-
+    network_params = [] #initialize empty list
     ## Bryan Arroyo Code ##
 
     for action_i in range(total_actions):
@@ -30,24 +28,10 @@ def collect_training_data(total_actions):
         action, steering_force = steering_behavior.get_action(action_i, sim_env.robot.body.angle)
 
         for action_timestep in range(action_repeat):
-            # if action_timestep == 0:
-            #     _, collision, sensor_readings = sim_env.step(steering_force)
-            # else:
-            #     _, collision, _ = sim_env.step(steering_force)
-            ## Bryan Arroyo Code ##
             if action_timestep == 0:
-                try:
-                    _, collision, sensor_readings = sim_env.step(steering_force)
-                except AssertionError as e:
-                    print(f"Assertion Error caught: {e}")
-                    continue #Moving on to the next iteration
+                _, collision, sensor_readings = sim_env.step(steering_force)
             else:
-                try:
-                    _, collision, _ = sim_env.step(steering_force)
-                except AssertionError as e:
-                    print(f"Assertion Error caught: {e}")
-                    continue #Moving on to the next iteration
-            ## Bryan Arroyo Code ##
+                _, collision, _ = sim_env.step(steering_force)
 
             if collision:
                 steering_behavior.reset_action()
@@ -56,19 +40,17 @@ def collect_training_data(total_actions):
                 if action_timestep < action_repeat * .3: #in case prior action caused collision
                     network_params[-1][-1] = collision #share collision result with prior action
                 break
+
         #STUDENTS: Update network_params.
-            ## Bryan Arroyo Code ##
-            network_params = np.append(network_params, np.array([sensor_readings[0], sensor_readings[1], sensor_readings[2], sensor_readings[3], sensor_readings[4], action, collision]).reshape(1, num_params), axis=0)
-            ## Bryan Arroyo Code ##
-
-
+        ## Bryan Arroyo Code ##
+        tempRow = list(sensor_readings) + [action, collision]
+        network_params.append(tempRow)
+    network_params = np.array(network_params) ## Convert to numpy array ##
+        ## Bryan Arroyo Code ##
     #STUDENTS: Save .csv here. Remember rows are individual samples, the first 5
     #columns are sensor values, the 6th is the action, and the 7th is collision.
     #Do not title the columns. Your .csv should look like the provided sample.
-
-    ## Bryan Arroyo Code ##
-    np.savetxt("test.csv", network_params, delimiter=",")
-    ## Bryan Arroyo Code ##
+    np.savetxt('submission.csv', network_params, delimiter=',',fmt='%.6f')
 
 
 
@@ -79,4 +61,3 @@ def collect_training_data(total_actions):
 if __name__ == '__main__':
     total_actions = 100
     collect_training_data(total_actions)
-    
