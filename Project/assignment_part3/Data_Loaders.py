@@ -6,6 +6,7 @@ import pickle
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
+
 class Nav_Dataset(dataset.Dataset):
     def __init__(self):
         self.data = np.genfromtxt('saved/training_data.csv', delimiter=',')
