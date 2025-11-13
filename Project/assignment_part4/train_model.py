@@ -57,10 +57,12 @@ def train_model(no_epochs):
             group_loss += current_loss.item()
         epoch_loss = group_loss/len(data_loaders.train_loader)
         losses.append(epoch_loss)
-        test_losses.append(model.evaluate(
-            model, data_loaders.test_loader, loss_function))
+        test_loss = model.evaluate(
+            model, data_loaders.test_loader, loss_function)
+        test_losses.append(test_loss)
 
         print(f"Epoch [{epoch_i+1}/{no_epochs}], Loss: {epoch_loss:.6f}")
+        print(f"Epoch [{epoch_i+1}/{no_epochs}], Test Loss: {test_loss:.6f}")
 
         # Check stop training condition
         if stop_training(test_losses,):
