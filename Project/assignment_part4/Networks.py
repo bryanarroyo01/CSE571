@@ -47,11 +47,12 @@ class Action_Conditioned_FF(nn.Module):
                 model_output = model(input)
 
                 loss = loss_function(model_output, label)
-                total_loss += loss.item()
+                # total_loss += loss.item()
+                total_loss += loss.item()*input.size(0)
 
         ## Return average loss over all samples ##
-        avg_loss = 0 if sample_count == 0 else total_loss / \
-            sample_count * input.size(0)
+        avg_loss = 0 if sample_count == 0 else total_loss / sample_count
+        # avg_loss=total_loss/len(test_loader)
         return avg_loss
 
 

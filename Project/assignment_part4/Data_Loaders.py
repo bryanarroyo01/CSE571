@@ -100,9 +100,9 @@ class Data_Loaders():
 
         ## Create DataLoader properties##
         self.train_loader = data.DataLoader(
-            balanced_dataset, batch_size=batch_size, shuffle=False)
+            balanced_dataset, batch_size=batch_size, shuffle=True)
         self.test_loader = data.DataLoader(
-            self.test_dataset, batch_size=batch_size, shuffle=False)
+            self.test_dataset, batch_size=batch_size, shuffle=True)
         ## Bryan Arroyo Code ##
 
 

@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 
 ## Bryan Arroyo Code ##
 import torch.optim as optimizer
+from sklearn.metrics import confusion_matrix
+import numpy as np
+# import pickle
+# from sklearn.preprocessing import StandardScaler, MinMaxScaler
 ## Bryan Arroyo Code ##
 
 
@@ -51,62 +55,114 @@ def train_model(no_epochs):
         for idx, sample in enumerate(data_loaders.train_loader):
             gradient_descent_method.zero_grad()  # Clear buffers
             output = model(sample['input'])
-            current_loss = loss_function(output, sample['label'])
+            label = sample['label'].unsqueeze(1)
+            current_loss = loss_function(output, label)
             current_loss.backward()  # Run backpropagation
             gradient_descent_method.step()  # Move down the hill one step
             group_loss += current_loss.item()
+            # debug=True
+            # if debug:
+            #     print(sample['input'].shape, sample['label'].shape)
+            #     debug=False
+            #     break
+
         epoch_loss = group_loss/len(data_loaders.train_loader)
         losses.append(epoch_loss)
-        test_loss = model.evaluate(
-            model, data_loaders.test_loader, loss_function)
+        test_loss = model.evaluate(model, data_loaders.test_loader, loss_function)
         test_losses.append(test_loss)
 
-        print(f"Epoch [{epoch_i+1}/{no_epochs}], Loss: {epoch_loss:.6f}")
-        print(f"Epoch [{epoch_i+1}/{no_epochs}], Test Loss: {test_loss:.6f}")
+        # print(f"Epoch [{epoch_i+1}/{no_epochs}], Loss: {epoch_loss:.6f}")
+        # print(f"Epoch [{epoch_i+1}/{no_epochs}], Test Loss: {test_loss:.6f}")
+        print(f"{epoch_i},{epoch_loss:.6f},{test_loss:.6f}")
 
         # Check stop training condition
-        if stop_training(test_losses,):
-            break
-    display_training_progress(min(epoch_i, no_epochs), losses, test_losses)
+        num_elements_back=10
+        test_loss_subarray = test_losses[-num_elements_back:]
+        if epoch_i>1000:
+            if stop_training(test_loss_subarray):
+                break
+
+    display_training_progress(losses, test_losses)
+    cm = compute_confusion_matrix(model, data_loaders.test_loader)
+    plot_confusion_matrix(cm)
+
 
 
 ## Bryan Arroyo Code ##
 
 
-def display_training_progress(x_max, function_1, function_2):
-    fig = plt.subplots()
-    ax1 = plt.subplots()
-    X = range(1, x_max+1)
-    # Training Loss
-    ax1.plot(X, function_1, 'b-', label='Model Loss')
-    ax1.set_xlabel('Training epoch')
-    ax1.set_ylabel('Training Loss')
-    ax1.tick_params('y', colors='b')
-    # Test Loss
-    ax2 = ax1.twinx()
-    ax2.plot(X, function_2, label='Test Loss')
-    ax2.set_ylabel('Test Loss', color='r')
-    ax2.tick_params('y', colors='r')
+def display_training_progress(train_losses, test_losses):
+    epochs = range(len(train_losses))   # X-axis
 
-    lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax2.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs, train_losses, label='Training Loss')
+    plt.plot(epochs, test_losses, label='Test Loss')
 
-    plt.title('Model Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss (MSE)')
+    plt.title('Training and Test Loss Over Epochs')
+    plt.legend()
     plt.grid(True)
+    plt.tight_layout()
     plt.show()
 
+def compute_confusion_matrix(model, dataloader):
+    model.eval()
+    all_preds = []
+    all_labels = []
+
+    with torch.no_grad():
+        for sample in dataloader:
+            inputs = sample['input']
+            labels = sample['label']   # labels should be 0 or 1
+
+            outputs = model(inputs)    # outputs should also be 0 or 1
+
+            # Convert output shape [batch,1] → [batch]
+            preds = outputs.squeeze().long()
+
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+    cm = confusion_matrix(all_labels, all_preds)
+    return cm         
+
+
+def plot_confusion_matrix(cm):
+    plt.figure(figsize=(6, 5))
+    plt.imshow(cm, cmap='Blues')
+
+    plt.title("Confusion Matrix")
+    plt.colorbar()
+
+    classes = ['0', '1']
+    tick_marks = np.arange(len(classes))
+
+    plt.xticks(tick_marks, classes)
+    plt.yticks(tick_marks, classes)
+
+    for i in range(2):
+        for j in range(2):
+            plt.text(j, i, cm[i, j],
+                     ha='center',
+                     va='center',
+                     color='white' if cm[i, j] > cm.max()/2 else 'black')
+
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.tight_layout()
+    plt.show()
 
 def display_model_effectiveness():
     pass
+# def document(csv_file, epoch, training_loss, testing_loss):
 
 
 def stop_training(test_error_array):
-    if len(test_error_array) < 3:
+    if len(test_error_array) < 2:
         return False
-    sub_array = test_error_array[-3:]
-    # If true, this means we have consistently increased model errors against test dataset en the last 3 epochs
-    return sub_array[0] < sub_array[1] < sub_array[2]
+    return all(test_error_array[i] > test_error_array[i - 1] for i in range(1, len(test_error_array)))
+
 
 ## Bryan Arroyo Code ##
 
@@ -118,5 +174,5 @@ if __name__ == '__main__':
     train_model(no_epochs)
 
     ## Bryan Arroyo Code ##
-    display_training_progress()
+    # display_training_progress()
     ## Bryan Arroyo Code ##
